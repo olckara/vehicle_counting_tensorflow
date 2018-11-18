@@ -6,23 +6,16 @@
 # --- Date           : 27th January 2018
 # ----------------------------------------------
 
-# Imports
-import numpy as np
-import os
-import six.moves.urllib as urllib
-import sys
-import tarfile
-import tensorflow as tf
-import zipfile
-import cv2
-import numpy as np
 import csv
-import time
+# Imports
+import os
 
-from collections import defaultdict
-from io import StringIO
-from matplotlib import pyplot as plt
-from PIL import Image
+import cv2
+import matplotlib
+import numpy as np
+import tensorflow as tf
+
+matplotlib.use('TkAgg')
 
 # Object detection imports
 from utils import label_map_util
@@ -40,13 +33,14 @@ if tf.__version__ < '1.4.0':
                       )
 
 # input video
-cap = cv2.VideoCapture('sub-1504614469486.mp4')
+cap = cv2.VideoCapture('MOV_1939.m4v')
 
 # Variables
 total_passed_vehicle = 0  # using it to count vehicles
 
-# By default I use an "SSD with Mobilenet" model here. See the detection model zoo (https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) for a list of other models that can be run out-of-the-box with varying speeds and accuracies.
-# What model to download.
+# By default I use an "SSD with Mobilenet" model here. See the detection model zoo (
+# https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) for a list
+#  of other models that can be run out-of-the-box with varying speeds and accuracies. What model to download.
 MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
 DOWNLOAD_BASE = \
@@ -71,8 +65,9 @@ with detection_graph.as_default():
         od_graph_def.ParseFromString(serialized_graph)
         tf.import_graph_def(od_graph_def, name='')
 
-# Loading label map
-# Label maps map indices to category names, so that when our convolution network predicts 5, we know that this corresponds to airplane. Here I use internal utility functions, but anything that returns a dictionary mapping integers to appropriate string labels would be fine
+# Loading label map Label maps map indices to category names, so that when our convolution network predicts 5,
+# we know that this corresponds to airplane. Here I use internal utility functions, but anything that returns a
+# dictionary mapping integers to appropriate string labels would be fine
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map,
         max_num_classes=NUM_CLASSES, use_display_name=True)
@@ -108,6 +103,8 @@ def object_detection_function():
             detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
             num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
+            video_writer = cv2.VideoWriter('outpy.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (640, 360))
+
             # for all the frames that are extracted from input video
             while cap.isOpened():
                 (ret, frame) = cap.read()
@@ -137,7 +134,7 @@ def object_detection_function():
                     np.squeeze(scores),
                     category_index,
                     use_normalized_coordinates=True,
-                    line_thickness=4,
+                    line_thickness=2,
                     )
 
                 total_passed_vehicle = total_passed_vehicle + counter
@@ -157,74 +154,67 @@ def object_detection_function():
 
                 # when the vehicle passed over line and counted, make the color of ROI line green
                 if counter == 1:
-                    cv2.line(input_frame, (0, 200), (640, 200), (0, 0xFF, 0), 5)
+                    cv2.line(input_frame, (300, 150), (440, 150), (0, 0xFF, 0), 3)
                 else:
-                    cv2.line(input_frame, (0, 200), (640, 200), (0, 0, 0xFF), 5)
+                    cv2.line(input_frame, (300, 150), (440, 150), (0, 0, 0xFF), 3)
+
 
                 # insert information text to video frame
-                cv2.rectangle(input_frame, (10, 275), (230, 337), (180, 132, 109), -1)
-                cv2.putText(
-                    input_frame,
-                    'ROI Line',
-                    (545, 190),
-                    font,
-                    0.6,
-                    (0, 0, 0xFF),
-                    2,
-                    cv2.LINE_AA,
-                    )
+                cv2.rectangle(input_frame, (10, 260), (230, 360), (8, 148, 253), -1)
                 cv2.putText(
                     input_frame,
                     'LAST PASSED VEHICLE INFO',
-                    (11, 290),
+                    (11, 275),
                     font,
                     0.5,
-                    (0xFF, 0xFF, 0xFF),
+                    (30,13,13),
                     1,
                     cv2.FONT_HERSHEY_SIMPLEX,
                     )
                 cv2.putText(
                     input_frame,
                     '-Movement Direction: ' + direction,
-                    (14, 302),
+                    (14, 290),
                     font,
                     0.4,
-                    (0xFF, 0xFF, 0xFF),
+                    (30,13,13),
                     1,
                     cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     )
                 cv2.putText(
                     input_frame,
-                    '-Speed(km/h): ' + speed,
-                    (14, 312),
+                    '-Speed: ' + '{:.1}'.format(speed) + ' km/h',
+                    (14, 302),
                     font,
                     0.4,
-                    (0xFF, 0xFF, 0xFF),
+                    (30,13,13),
                     1,
                     cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     )
                 cv2.putText(
                     input_frame,
                     '-Color: ' + color,
-                    (14, 322),
+                    (14, 314),
                     font,
                     0.4,
-                    (0xFF, 0xFF, 0xFF),
+                    (30,13,13),
                     1,
                     cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     )
                 cv2.putText(
                     input_frame,
                     '-Vehicle Size/Type: ' + size,
-                    (14, 332),
+                    (14, 326),
                     font,
                     0.4,
-                    (0xFF, 0xFF, 0xFF),
+                    (30,13,13),
                     1,
                     cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     )
 
                 cv2.imshow('vehicle detection', input_frame)
+
+                video_writer.write(input_frame)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -236,6 +226,7 @@ def object_detection_function():
                             csv_line.split(',')
                         writer.writerows([csv_line.split(',')])
             cap.release()
+            video_writer.release()
             cv2.destroyAllWindows()
 
 

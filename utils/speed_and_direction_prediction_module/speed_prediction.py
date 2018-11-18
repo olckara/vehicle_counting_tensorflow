@@ -13,32 +13,31 @@ bottom_position_of_detected_vehicle = [0]
 
 
 def predict_speed(
-    top,
-    bottom,
-    right,
-    left,
-    current_frame_number,
-    crop_img,
-    roi_position,
-    ):
+        top,
+        bottom,
+        right,
+        left,
+        current_frame_number,
+        crop_img,
+        roi_position,
+):
     speed = 'n.a.'  # means not available, it is just initialization
     direction = 'n.a.'  # means not available, it is just initialization
     scale_constant = 1  # manual scaling because we did not performed camera calibration
     isInROI = True  # is the object that is inside Region Of Interest
     update_csv = False
 
-    if bottom < 250:
+    if bottom < (roi_position + 50):
         scale_constant = 1  # scale_constant is used for manual scaling because we did not performed camera calibration
-    elif bottom > 250 and bottom < 320:
+    elif (roi_position + 50) < bottom < (roi_position + 120):
         scale_constant = 2  # scale_constant is used for manual scaling because we did not performed camera calibration
     else:
         isInROI = False
 
-    if len(bottom_position_of_detected_vehicle) != 0 and bottom \
-        - bottom_position_of_detected_vehicle[0] > 0 and 205 \
-        < bottom_position_of_detected_vehicle[0] \
-        and bottom_position_of_detected_vehicle[0] < 210 \
-        and roi_position < bottom:
+    if len(bottom_position_of_detected_vehicle) != 0 and \
+            bottom - bottom_position_of_detected_vehicle[0] > 0 and \
+            (roi_position + 5) < bottom_position_of_detected_vehicle[0] < (roi_position + 10) and \
+            roi_position < bottom:
         is_vehicle_detected.insert(0, 1)
         update_csv = True
         image_saver.save_image(crop_img)  # save detected vehicle image
@@ -62,4 +61,4 @@ def predict_speed(
             current_frame_number_list.insert(0, current_frame_number)
             bottom_position_of_detected_vehicle.insert(0, bottom)
 
-    return (direction, speed, is_vehicle_detected, update_csv)
+    return direction, speed, is_vehicle_detected, update_csv

@@ -37,7 +37,7 @@ from utils.color_recognition_module import color_recognition_api
 
 # Variables
 is_vehicle_detected = [0]
-ROI_POSITION = 200
+ROI_POSITION = 150
 
 _TITLE_LEFT_MARGIN = 10
 _TITLE_TOP_MARGIN = 10
@@ -178,11 +178,13 @@ def draw_bounding_box_on_image(current_frame_number,image,
   image_temp = numpy.array(image)
   detected_vehicle_image = image_temp[int(top):int(bottom), int(left):int(right)]
 
-  if(bottom > ROI_POSITION): # if the vehicle get in ROI area, vehicle predicted_speed predicted_color algorithms are called - 200 is an arbitrary value, for my case it looks very well to set position of ROI line at y pixel 200
+  if(bottom > ROI_POSITION):
+      # if the vehicle get in ROI area, vehicle predicted_speed predicted_color algorithms are
+      #  called - 200 is an arbitrary value, for my case it looks very well to set position of ROI line at y pixel 200
         predicted_direction, predicted_speed,  is_vehicle_detected, update_csv = speed_prediction.predict_speed(top, bottom, right, left, current_frame_number, detected_vehicle_image, ROI_POSITION)
 
   predicted_color = color_recognition_api.color_recognition(detected_vehicle_image)
-  
+
   try:
     font = ImageFont.truetype('arial.ttf', 16)
   except IOError:
@@ -476,9 +478,9 @@ def visualize_boxes_and_labels_on_image_array(current_frame_number,image,
       else:
         if not agnostic_mode:
           if classes[i] in category_index.keys():
-            class_name = category_index[classes[i]]['name']         
+            class_name = category_index[classes[i]]['name']
           else:
-            class_name = 'N/A'              
+            class_name = 'N/A'
           display_str = '{}: {}%'.format(class_name,int(100*scores[i]))
         else:
           display_str = 'score: {}%'.format(int(100 * scores[i]))
@@ -499,7 +501,7 @@ def visualize_boxes_and_labels_on_image_array(current_frame_number,image,
           box_to_instance_masks_map[box],
           color=color
       )
-    
+
     display_str_list=box_to_display_str_map[box]
     # we are interested just vehicles (i.e. cars and trucks)
     if (("car" in display_str_list[0]) or ("truck" in display_str_list[0]) or ("bus" in display_str_list[0])):
@@ -512,8 +514,8 @@ def visualize_boxes_and_labels_on_image_array(current_frame_number,image,
                 color=color,
                 thickness=line_thickness,
                 display_str_list=box_to_display_str_map[box],
-                use_normalized_coordinates=use_normalized_coordinates) 
-      
+                use_normalized_coordinates=use_normalized_coordinates)
+
             if keypoints is not None:
               draw_keypoints_on_image_array(
                   image,
@@ -525,7 +527,7 @@ def visualize_boxes_and_labels_on_image_array(current_frame_number,image,
   if(1 in is_vehicle_detected):
     counter = 1
     del is_vehicle_detected[:]
-    is_vehicle_detected = []        
+    is_vehicle_detected = []
     if(class_name == "boat"):
       class_name = "truck"
     csv_line_util = class_name + "," + csv_line
